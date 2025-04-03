@@ -41,14 +41,10 @@ RUN git config --global http.sslVerify false
 # Copy source code
 COPY . .
 
-RUN nimble install https://github.com/vacp2p/nim-libp2p@#e82bb5ec6b342a059d640130997c169cd92bf148
-
-RUN nimble install_pinned
-
-RUN nimble install -dy
+RUN nimble install
 
 # Compile the Nim application
-RUN nimble c -d:chronicles_colors=None --gc:refc --threads:on -d:metrics -d:libp2p_network_protocols_metrics  -d:chronicles_log_level:DEBUG ./src/test.nim
+RUN nimble c --mm:refc --threads:on  -d:chronicles_log_level:DEBUG ./src/test.nim
 
 # =============================================================================
 # Run the app
