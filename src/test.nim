@@ -52,7 +52,7 @@ proc main() {.async.} =
       pingProto = Ping.new(rng = rng)
 
     await srcSwitch.start()
-    await sleepAsync(10.seconds)
+    # await sleepAsync(10.seconds)
     await pingProto.start()
 
     srcSwitch.mount(pingProto)
