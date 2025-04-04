@@ -44,7 +44,7 @@ COPY . .
 RUN nimble install
 
 # Compile the Nim application
-RUN nimble c --mm:refc --threads:on  -d:chronicles_log_level:DEBUG ./src/test.nim
+RUN nimble c --mm:refc --threads:on  -d:chronicles_log_level:INFO ./src/test.nim
 
 # =============================================================================
 # Run the app

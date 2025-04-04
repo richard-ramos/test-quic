@@ -9,6 +9,7 @@
 # This file may not be copied, modified, or distributed except according to
 # those terms.
 
+import strutils
 import options, sequtils
 import chronos
 import os
@@ -18,8 +19,6 @@ import
     errors,
     dial,
     switch,
-    protocols/ping,
-    multistream,
     builders,
     stream/bufferstream,
     stream/connection,
@@ -27,62 +26,43 @@ import
     multiaddress,
     peerinfo,
     crypto/crypto,
-    protocols/protocol,
-    protocols/secure/secure,
-    muxers/muxer,
-    muxers/mplex/lpchannel,
-    utils/semaphore,
-    transports/tcptransport,
-    transports/wstransport,
-    transports/quictransport,
   ]
 from times import cpuTime
 
 proc main() {.async.} =
-    let
-      quicAddress1 = MultiAddress.init("/ip4/0.0.0.0/udp/5000/quic-v1").tryGet()
-      rng = crypto.newRng()
-      srcSwitch = SwitchBuilder
-        .new()
-        .withAddress(quicAddress1)
-        .withRng(rng)
-        .withQuicTransport()
-        .withNoise()
-        .build()
-      pingProto = Ping.new(rng = rng)
+  let
+    quicAddress1 = MultiAddress.init("/ip4/0.0.0.0/udp/5000/quic-v1").tryGet()
+    rng = crypto.newRng()
+    srcSwitch = SwitchBuilder
+      .new()
+      .withAddress(quicAddress1)
+      .withRng(rng)
+      .withQuicTransport()
+      .withNoise()
+      .build()
 
-    await srcSwitch.start()
-    # await sleepAsync(10.seconds)
-    await pingProto.start()
+  await srcSwitch.start()
 
-    srcSwitch.mount(pingProto)
-
-    let tAddress = "nimp2p-service:5000"
-    var addrs: seq[MultiAddress]
+  let tAddress = getEnv("connect_to")
+  if tAddress != "":
     let quicV1 = MultiAddress.init("/quic-v1").tryGet()
-    addrs = resolveTAddress(tAddress).mapIt(MultiAddress.init(it, IPPROTO_UDP).tryGet().concat(quicV1).tryGet())
-    echo tAddress, " resolved: ", addrs
+    let addrs = tAddress.split(",").mapIt(resolveTAddress(it)).concat().mapIt(
+        MultiAddress.init(it, IPPROTO_UDP).tryGet().concat(quicV1).tryGet()
+      )
+
+    await sleepAsync(1.minutes)
 
     for i, addr in addrs.pairs:
       try:
+        let start = cpuTime()
         let peerId = await srcSwitch.connect(addr, allowUnknownPeerId = true)
-        info "Connected", peerId = peerId
+        let duration = cpuTime() - start
+        info "Connected", peerId = peerId, duration, address = addr
       except CatchableError as exc:
         error "Failed to dial", index = i, errorMsg = exc.msg
-
-    info "CONNECTED!!!!!!!!!!!"
-
-    #while true:
-    #  await sleepAsync(2.seconds)
-    #  try:
-    #    let conn = await srcSwitch.dial(peerId0, PingCodec)
-    #    let pingDelay = await pingProto.ping(conn)
-    #    info "PING !!!!!!!!!!!!!!!!"
-    #  except CatchableError as exc:
-    #    error "ERROR!!!!", error=exc.msg
 
     await sleepAsync(10.minutes)
 
 when isMainModule:
   info "running client"
-  waitFor main() 
+  waitFor main()
