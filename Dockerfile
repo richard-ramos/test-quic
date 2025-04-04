@@ -61,6 +61,6 @@ WORKDIR /node
 COPY --from=build_app /node/src/test /node/main
 
 # Expose necessary ports
-EXPOSE 12345
+EXPOSE 5000
 
 ENTRYPOINT ["/node/main"]
