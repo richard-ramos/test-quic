@@ -44,7 +44,7 @@ COPY . .
 RUN nimble install
 
 # Compile the Nim application
-RUN nimble c --mm:refc --threads:on  -d:chronicles_log_level:INFO ./src/test.nim
+RUN nimble c --mm:refc --threads:on  -d:chronicles_log_level:TRACE ./src/test.nim
 
 # =============================================================================
 # Run the app
@@ -52,10 +52,12 @@ FROM debian:bookworm AS prod
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update && apt -y install cron libpcre3 libssl-dev
+RUN apt update && apt -y install cron libpcre3 libssl-dev iproute2
 
 # Set the working directory
 WORKDIR /node
+
+COPY ./run.sh ./run.sh
 
 # Copy the compiled binary from the build stage
 COPY --from=build_app /node/src/test /node/main
@@ -63,4 +65,4 @@ COPY --from=build_app /node/src/test /node/main
 # Expose necessary ports
 EXPOSE 5000
 
-ENTRYPOINT ["/node/main"]
+ENTRYPOINT ["/node/run.sh"]

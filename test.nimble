@@ -10,4 +10,4 @@ bin = @["test"]
 # Dependencies
 
 requires "nim >= 1.6.0",
-  "https://github.com/vacp2p/nim-libp2p#e82bb5ec6b342a059d640130997c169cd92bf148"
+  "https://github.com/vacp2p/nim-libp2p#e49d8854789ee4a41e88e94dee55756fd3dd8cb4"
